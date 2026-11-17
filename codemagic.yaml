@@ -1,0 +1,45 @@
+# Configuration Codemagic pour Madafit (Flutter)
+# Documentation : https://docs.codemagic.io/yaml/building-a-flutter-app/
+workflows:
+  android-release:
+    name: Madafit Android (APK + AAB)
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      # Version de Flutter utilisee en CI. Doit rester >= 3.50.0 (Dart >= 3.13).
+      flutter: 3.50.0
+      java: 17
+      vars:
+        PACKAGE_NAME: "com.madafit.apk_madafit"
+      # Signature Play Store : decommenter apres avoir ajoute le keystore
+      # dans Codemagic (Settings > Code signing identities > Android keystore)
+      # et l'avoir nomme "madafit_keystore".
+      # android_signing:
+      #   - madafit_keystore
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+    scripts:
+      - name: Recuperation des dependances
+        script: |
+          flutter pub get
+      - name: Analyse statique (non bloquante)
+        script: |
+          flutter analyze || true
+      - name: Build APK release
+        script: |
+          flutter build apk --release
+      - name: Build App Bundle (Play Store)
+        script: |
+          flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/flutter-apk/app-release.apk
+      - build/app/outputs/bundle/release/app-release.aab
+    publishing:
+      # Decommenter et renseigner l'email pour recevoir les builds.
+      # email:
+      #   recipients:
+      #     - votre.email@exemple.com
+      #   notify:
+      #     success: true
+      #     failure: true
